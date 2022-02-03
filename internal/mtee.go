@@ -9,7 +9,7 @@ import (
 // mtee represents the application mtee and its configurations
 type mtee struct {
 	append  bool
-	file    *os.File
+	file    *file
 	scanner *bufio.Scanner
 }
 
@@ -32,6 +32,7 @@ func (m *mtee) init(fstr string, modeAppend bool) error {
 func (m *mtee) setFile(fstr string, modeAppend bool) error {
 	var f *os.File
 	var err error
+
 	// open or create the file
 	switch modeAppend {
 	case true:
@@ -44,20 +45,28 @@ func (m *mtee) setFile(fstr string, modeAppend bool) error {
 		return err
 	}
 
-	m.file = f
+	m.file = &file{f}
+	return nil
+}
+
+func (m *mtee) tee() error {
+	m.scanner.Scan()
+	text := fmt.Sprintf("%s\n", m.scanner.Text())
+	fmt.Printf(text)
+	if m.file != nil {
+		_, err := m.file.write([]byte(text))
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
 func (m *mtee) run() error {
 	for {
-		m.scanner.Scan()
-		text := fmt.Sprintf("%s\n", m.scanner.Text())
-		fmt.Printf(text)
-		if m.file != nil {
-			_, err := m.file.Write([]byte(text))
-			if err != nil {
-				return err
-			}
+		err := m.tee()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -72,7 +81,10 @@ func Run(fs string, mode bool) error {
 		return err
 	}
 
-	defer m.file.Close()
+	// if we opened a file, we need to close it
+	if m.file != nil {
+		defer m.file.Close()
+	}
 
 	return (m.run())
 }
