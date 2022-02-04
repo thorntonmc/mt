@@ -62,6 +62,18 @@ func (m *mtee) setOut(fstr string, index int, modeAppend bool) error {
 	return nil
 }
 
+type teeResult struct {
+	ok  bool
+	err error
+}
+
+func newTeeResult(err error) teeResult {
+	return teeResult{
+		err == nil,
+		err,
+	}
+}
+
 // tee scans text from in and writes it to out
 func (m *mtee) tee() error {
 	// scan from in
