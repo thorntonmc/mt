@@ -100,8 +100,8 @@ func Run(files []string, mode bool) error {
 	}
 
 	// if we opened a file, we need to close it
-	if m.file != nil {
-		defer m.file.Close()
+	for _, f := range m.out {
+		defer f.Close()
 	}
 
 	return (m.run())
