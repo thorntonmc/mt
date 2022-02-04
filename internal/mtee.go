@@ -8,28 +8,41 @@ import (
 
 // mtee represents the application mtee and its configurations
 type mtee struct {
-	append  bool
-	file    *file
-	scanner *bufio.Scanner
+	out []*os.File
+	in  *os.File
 }
 
-func (m *mtee) init(fstr string, modeAppend bool) error {
-	switch fstr {
-	case "":
-		m.file = nil
+func (m *mtee) init(files []string, modeAppend bool) error {
+	// set outputs
+	// first output is always stdout
+	m.out = append(m.out, os.Stdout)
+	m.in = os.Stdin
+
+	switch len(files) {
+	case 0:
+		m.out = nil
 	default:
-		err := m.setFile(fstr, modeAppend)
+		err := m.setFiles(files, modeAppend)
 		if err != nil {
 			return err
 		}
 	}
 
-	m.scanner = bufio.NewScanner(os.Stdin)
 	return nil
 
 }
 
-func (m *mtee) setFile(fstr string, modeAppend bool) error {
+func (m *mtee) setFiles(files []string, modeAppend bool) error {
+	for i, v := range files {
+		err := m.setOut(v, i, modeAppend)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m *mtee) setOut(fstr string, index int, modeAppend bool) error {
 	var f *os.File
 	var err error
 
@@ -45,26 +58,20 @@ func (m *mtee) setFile(fstr string, modeAppend bool) error {
 		return err
 	}
 
-	m.file = &file{f}
+	m.out[index] = f
 	return nil
 }
 
+// tee scans text from an input and writes it to all of its output files
 func (m *mtee) tee() error {
-	// read from in
+	// scan from in
 	scanner := bufio.NewScanner(m.in)
-	scan = s.Scan()
-	text := fmt.Sprintf("%s\n", scan.
-
-
-	if err != nil {
-		return fmt.Errorf("failed to read from in: %w", err)
-	}
-
-	text := fmt.Sprintf("%s\n", string(b))
-	fmt.Println("text is " + text)
+	scanner.Scan()
+	text := fmt.Sprintf("%s\n", scanner.Text())
 
 	// write to all outs
 	for _, v := range m.out {
+		fmt.Println("writing to out")
 		_, err := v.Write([]byte(text))
 		if err != nil {
 			return err
@@ -84,10 +91,10 @@ func (m *mtee) run() error {
 }
 
 // Run runs mtee from a file string and mode string
-func Run(fs string, mode bool) error {
+func Run(files []string, mode bool) error {
 	m := &mtee{}
 
-	err := m.init(fs, mode)
+	err := m.init(files, mode)
 	if err != nil {
 		return err
 	}
