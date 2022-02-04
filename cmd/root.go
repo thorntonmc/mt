@@ -14,8 +14,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:  "mtee",
-	Args: cobra.MaximumNArgs(1),
+	Use: "mtee",
 	Run: func(cmd *cobra.Command, args []string) {
 		fargs := make([]string, len(args)) // files
 
