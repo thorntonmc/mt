@@ -76,6 +76,9 @@ func newTeeResult(err error) teeResult {
 
 // tee scans text from in and writes it to out
 func (m *mtee) tee() error {
+	numOuts := len(m.out)
+	results := make(chan teeResult, numOuts)
+
 	// scan from in
 	scanner := bufio.NewScanner(m.in)
 	scanner.Scan()
@@ -83,12 +86,23 @@ func (m *mtee) tee() error {
 
 	// write to all outs
 	for _, v := range m.out {
-		fmt.Println("writing to out")
-		_, err := v.Write([]byte(text))
-		if err != nil {
-			return err
+		go func(v *os.File) {
+			//fmt.Println("goroutine")
+			_, err := v.Write([]byte(text))
+			results <- newTeeResult(err)
+		}(v)
+	}
+
+	for i := 0; i < numOuts; i++ {
+		//fmt.Println("checkin numOuts")
+		result := <-results
+		//fmt.Println("read from err")
+		if !result.ok {
+			//fmt.Printf("not ok? %t\n", result.ok)
+			return result.err
 		}
 	}
+
 	return nil
 }
 
