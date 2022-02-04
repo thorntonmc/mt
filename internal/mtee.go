@@ -28,7 +28,6 @@ func newTeeResult(err error) teeResult {
 func (m *mtee) init(files []string, modeAppend bool) error {
 	// set outputs
 	numOut := 1 + len(files)
-	fmt.Printf("making array with len %d\n", numOut)
 	m.out = make([]*os.File, numOut)
 	m.in = os.Stdin
 
