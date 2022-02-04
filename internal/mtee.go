@@ -62,7 +62,7 @@ func (m *mtee) setOut(fstr string, index int, modeAppend bool) error {
 	return nil
 }
 
-// tee scans text from an input and writes it to all of its output files
+// tee scans text from in and writes it to out
 func (m *mtee) tee() error {
 	// scan from in
 	scanner := bufio.NewScanner(m.in)
