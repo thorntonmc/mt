@@ -50,11 +50,22 @@ func (m *mtee) setFile(fstr string, modeAppend bool) error {
 }
 
 func (m *mtee) tee() error {
-	m.scanner.Scan()
-	text := fmt.Sprintf("%s\n", m.scanner.Text())
-	fmt.Printf(text)
-	if m.file != nil {
-		_, err := m.file.write([]byte(text))
+	// read from in
+	scanner := bufio.NewScanner(m.in)
+	scan = s.Scan()
+	text := fmt.Sprintf("%s\n", scan.
+
+
+	if err != nil {
+		return fmt.Errorf("failed to read from in: %w", err)
+	}
+
+	text := fmt.Sprintf("%s\n", string(b))
+	fmt.Println("text is " + text)
+
+	// write to all outs
+	for _, v := range m.out {
+		_, err := v.Write([]byte(text))
 		if err != nil {
 			return err
 		}

@@ -17,15 +17,17 @@ var rootCmd = &cobra.Command{
 	Use:  "mtee",
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var f string // file
-		// get file argument, if any
-		if len(args) == 1 {
-			f = args[0]
+		fargs := make([]string, len(args)) // files
+
+		// get file arguments if any
+		for k, v := range args {
+			fargs[k] = v
 		}
+
 		// get flags
 		m, err := cmd.Flags().GetBool("append")
 		cobra.CheckErr(err)
-		err = mtee.Run(f, m)
+		err = mtee.Run(fargs, m)
 		cobra.CheckErr(err)
 	},
 }
