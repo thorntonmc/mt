@@ -79,26 +79,20 @@ func (m *mtee) tee() error {
 	numOuts := len(m.out)
 	results := make(chan teeResult, numOuts)
 
-	// scan from in
 	scanner := bufio.NewScanner(m.in)
 	scanner.Scan()
 	text := fmt.Sprintf("%s\n", scanner.Text())
 
-	// write to all outs
 	for _, v := range m.out {
 		go func(v *os.File) {
-			//fmt.Println("goroutine")
 			_, err := v.Write([]byte(text))
 			results <- newTeeResult(err)
 		}(v)
 	}
 
 	for i := 0; i < numOuts; i++ {
-		//fmt.Println("checkin numOuts")
 		result := <-results
-		//fmt.Println("read from err")
 		if !result.ok {
-			//fmt.Printf("not ok? %t\n", result.ok)
 			return result.err
 		}
 	}
