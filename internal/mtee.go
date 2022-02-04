@@ -14,20 +14,20 @@ type mtee struct {
 
 func (m *mtee) init(files []string, modeAppend bool) error {
 	// set outputs
-	// first output is always stdout
-	m.out = append(m.out, os.Stdout)
+	numOut := 1 + len(files)
+	fmt.Printf("making array with len %d\n", numOut)
+	m.out = make([]*os.File, numOut)
 	m.in = os.Stdin
 
-	switch len(files) {
-	case 0:
-		m.out = nil
-	default:
+	if len(files) > 0 {
 		err := m.setFiles(files, modeAppend)
 		if err != nil {
 			return err
 		}
 	}
 
+	// last output is stdout
+	m.out[numOut-1] = os.Stdout
 	return nil
 
 }
