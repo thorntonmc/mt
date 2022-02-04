@@ -25,6 +25,10 @@ func newTeeResult(err error) teeResult {
 	}
 }
 
+func checkResults(c *chan teeResult) {
+
+}
+
 func (m *mtee) init(files []string, modeAppend bool) error {
 	// set outputs
 	numOut := 1 + len(files)
@@ -45,10 +49,20 @@ func (m *mtee) init(files []string, modeAppend bool) error {
 }
 
 func (m *mtee) setFiles(files []string, modeAppend bool) error {
+	numFiles := len(files)
+	results := make(chan teeResult, numFiles)
+
 	for i, v := range files {
-		err := m.setOut(v, i, modeAppend)
-		if err != nil {
-			return err
+		go func(i int, v string) {
+			err := m.setOut(v, i, modeAppend)
+			results <- newTeeResult(err)
+		}(i, v)
+	}
+
+	for i := 0; i < numFiles; i++ {
+		result := <-results
+		if !result.ok {
+			return result.err
 		}
 	}
 	return nil
