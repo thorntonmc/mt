@@ -12,6 +12,19 @@ type mtee struct {
 	in  *os.File
 }
 
+// teeResult represents the result of a mtee goroutine
+type teeResult struct {
+	ok  bool
+	err error
+}
+
+func newTeeResult(err error) teeResult {
+	return teeResult{
+		err == nil,
+		err,
+	}
+}
+
 func (m *mtee) init(files []string, modeAppend bool) error {
 	// set outputs
 	numOut := 1 + len(files)
@@ -60,18 +73,6 @@ func (m *mtee) setOut(fstr string, index int, modeAppend bool) error {
 
 	m.out[index] = f
 	return nil
-}
-
-type teeResult struct {
-	ok  bool
-	err error
-}
-
-func newTeeResult(err error) teeResult {
-	return teeResult{
-		err == nil,
-		err,
-	}
 }
 
 // tee scans text from in and writes it to out
