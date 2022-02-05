@@ -6,13 +6,13 @@ import (
 	"os"
 )
 
-// mtee represents the application mtee and its configurations
+// mtee is the application mtee and its configurations
 type mtee struct {
 	out []*os.File
 	in  *os.File
 }
 
-// teeResult represents the result of a mtee goroutine
+// teeResult is the result of a mtee goroutine
 type teeResult struct {
 	ok  bool
 	err error
