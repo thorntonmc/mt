@@ -25,10 +25,6 @@ func newTeeResult(err error) teeResult {
 	}
 }
 
-func checkResults(c *chan teeResult) {
-
-}
-
 func (m *mtee) init(files []string, modeAppend bool) error {
 	// set outputs
 	numOut := 1 + len(files)
