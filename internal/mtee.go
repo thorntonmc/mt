@@ -87,7 +87,13 @@ func (m *mtee) setOut(fstr string, index int, modeAppend bool) error {
 	return nil
 }
 
-// tee scans text from in and writes it to out
+// write t to v, store results in c
+func writeAndStore(b []byte, w io.Writer, c chan teeResult) {
+	_, err := w.Write(b)
+	c <- newTeeResult(err)
+}
+
+// tee scans text from in and writes it to all outs
 func (m *mtee) tee() error {
 	numOuts := len(m.out)
 	results := make(chan teeResult, numOuts)
