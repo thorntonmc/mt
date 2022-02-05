@@ -129,6 +129,7 @@ func Run(files []string, mode bool) error {
 	m := &mtee{}
 
 	err := m.init(files, mode)
+	defer m.in.Close()
 	if err != nil {
 		return err
 	}
