@@ -2,7 +2,6 @@ package mtee
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
 )
@@ -97,9 +96,9 @@ func writeAndStore(b []byte, w io.Writer, c chan teeResult) {
 func (m *mtee) tee() error {
 	numOuts := len(m.out)
 	results := make(chan teeResult, numOuts)
-
 	m.scanner.Scan()
-	text := fmt.Sprintf("%s\n", m.scanner.Text())
+	b := m.scanner.Bytes()
+	b = append(b, '\n')
 
 	for _, v := range m.out {
 		go writeAndStore(b, v, results)
