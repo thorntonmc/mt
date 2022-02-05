@@ -3,13 +3,15 @@ package mtee
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 )
 
 // mtee is the application mtee and its configurations
 type mtee struct {
-	out []*os.File
-	in  *os.File
+	out     []*os.File
+	in      *os.File
+	scanner *bufio.Scanner
 }
 
 // teeResult is the result of a mtee goroutine
@@ -30,6 +32,7 @@ func (m *mtee) init(files []string, modeAppend bool) error {
 	numOut := 1 + len(files)
 	m.out = make([]*os.File, numOut)
 	m.in = os.Stdin
+	m.scanner = bufio.NewScanner(m.in)
 
 	if len(files) > 0 {
 		err := m.setFiles(files, modeAppend)
@@ -89,9 +92,8 @@ func (m *mtee) tee() error {
 	numOuts := len(m.out)
 	results := make(chan teeResult, numOuts)
 
-	scanner := bufio.NewScanner(m.in)
-	scanner.Scan()
-	text := fmt.Sprintf("%s\n", scanner.Text())
+	m.scanner.Scan()
+	text := fmt.Sprintf("%s\n", m.scanner.Text())
 
 	for _, v := range m.out {
 		go func(v *os.File) {
