@@ -102,10 +102,7 @@ func (m *mtee) tee() error {
 	text := fmt.Sprintf("%s\n", m.scanner.Text())
 
 	for _, v := range m.out {
-		go func(v io.Writer) {
-			_, err := v.Write([]byte(text))
-			results <- newTeeResult(err)
-		}(v)
+		go writeAndStore(b, v, results)
 	}
 
 	for i := 0; i < numOuts; i++ {
