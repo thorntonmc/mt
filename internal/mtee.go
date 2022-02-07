@@ -116,7 +116,8 @@ func (m *mtee) setOut(fstr string, index int, modeAppend bool) error {
 		return err
 	}
 
-	m.out[index] = f
+	m.out[index] = newFile(f)
+
 	return nil
 }
 
