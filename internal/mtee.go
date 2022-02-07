@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 )
 
@@ -14,6 +13,32 @@ const (
 	defaultBufSize = 4096
 	stdOutBufSize  = 1
 )
+
+// write t to v, store results in c
+func writeAndStore(b []byte, w io.Writer, c chan teeResult) {
+	_, err := w.Write(b)
+	c <- newTeeResult(err)
+}
+
+// tee scans from a scanner and writes to all outs, storing
+// the results in channel
+func tee(s *bufio.Scanner, w []*out, c chan teeResult) error {
+	s.Scan()
+	b := s.Bytes()
+	b = append(b, '\n')
+
+	for _, v := range w {
+		go writeAndStore(b, v, c)
+	}
+
+	for i := 0; i < len(c); i++ {
+		result := <-c
+		if !result.ok {
+			return result.err
+		}
+	}
+	return nil
+}
 
 // mtee is the application mtee and its configurations
 type mtee struct {
@@ -23,40 +48,13 @@ type mtee struct {
 	results chan teeResult
 }
 
-type out struct {
-	file *os.File
-	buf  *bufio.Writer
-	mu   sync.Mutex
-}
-
-func (o *out) Write(b []byte) (n int, err error) {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-	return o.buf.Write(b)
-}
-
-// close flushes the file's buffer and closes the file
-func (o *out) Close() error {
-	err := o.buf.Flush()
-	if err != nil {
-		return err
-	}
-	return o.file.Close()
-}
-
-func newOut(f *os.File, n int) *out {
-	return &out{
-		file: f,
-		buf:  bufio.NewWriterSize(f, n),
-	}
-}
-
 // teeResult is the result of a mtee goroutine
 type teeResult struct {
 	ok  bool
 	err error
 }
 
+// newTeeResult takes an error and wraps it in a teeResult
 func newTeeResult(err error) teeResult {
 	return teeResult{
 		err == nil,
@@ -123,30 +121,6 @@ func (m *mtee) setOut(fstr string, index int, modeAppend bool) error {
 
 	m.out[index] = newOut(f, defaultBufSize)
 
-	return nil
-}
-
-// write t to v, store results in c
-func writeAndStore(b []byte, w io.Writer, c chan teeResult) {
-	_, err := w.Write(b)
-	c <- newTeeResult(err)
-}
-
-func tee(s *bufio.Scanner, w []*out, c chan teeResult) error {
-	s.Scan()
-	b := s.Bytes()
-	b = append(b, '\n')
-
-	for _, v := range w {
-		go writeAndStore(b, v, c)
-	}
-
-	for i := 0; i < len(c); i++ {
-		result := <-c
-		if !result.ok {
-			return result.err
-		}
-	}
 	return nil
 }
 
