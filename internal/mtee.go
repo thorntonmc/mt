@@ -2,8 +2,12 @@ package mtee
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 )
 
 // mtee is the application mtee and its configurations
@@ -12,6 +16,7 @@ type mtee struct {
 	in      *os.File
 	scanner *bufio.Scanner
 	results chan teeResult
+}
 
 type out struct {
 	file *os.File
