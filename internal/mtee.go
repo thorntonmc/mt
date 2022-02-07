@@ -8,9 +8,29 @@ import (
 
 // mtee is the application mtee and its configurations
 type mtee struct {
-	out     []*os.File
+	out     []*out
 	in      *os.File
 	scanner *bufio.Scanner
+
+type out struct {
+	file *os.File
+	buf  *bufio.Writer
+	mu   sync.Mutex
+}
+
+func (o *out) Write(b []byte) (n int, err error) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	return o.buf.Write(b)
+}
+
+// close flushes the file's buffer and closes the file
+func (o *out) Close() error {
+	err := o.buf.Flush()
+	if err != nil {
+		return err
+	}
+	return o.file.Close()
 }
 
 // teeResult is the result of a mtee goroutine
