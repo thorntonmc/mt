@@ -56,7 +56,7 @@ func newTeeResult(err error) teeResult {
 func (m *mtee) init(files []string, modeAppend bool) error {
 	// set outputs
 	numOut := 1 + len(files)
-	m.out = make([]*os.File, numOut)
+	m.out = make([]*out, numOut)
 	m.in = os.Stdin
 	m.scanner = bufio.NewScanner(m.in)
 
@@ -68,7 +68,7 @@ func (m *mtee) init(files []string, modeAppend bool) error {
 	}
 
 	// last output is stdout
-	m.out[numOut-1] = os.Stdout
+	m.out[numOut-1] = newFile(os.Stdout)
 	return nil
 
 }
