@@ -74,7 +74,7 @@ func (m *mtee) init(files []string, modeAppend bool) error {
 	}
 
 	// last output is stdout
-	m.out[numOut-1] = newFile(os.Stdout)
+	m.out[numOut-1] = newOut(os.Stdout)
 	m.results = make(chan teeResult, len(files))
 	return nil
 
@@ -116,7 +116,7 @@ func (m *mtee) setOut(fstr string, index int, modeAppend bool) error {
 		return err
 	}
 
-	m.out[index] = newFile(f)
+	m.out[index] = newOut(f)
 
 	return nil
 }
