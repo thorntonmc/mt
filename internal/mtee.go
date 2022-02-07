@@ -121,26 +121,34 @@ func writeAndStore(b []byte, w io.Writer, c chan teeResult) {
 	c <- newTeeResult(err)
 }
 
-// tee scans text from in and writes it to all outs
-func (m *mtee) tee() error {
-	numOuts := len(m.out)
-	results := make(chan teeResult, numOuts)
-	m.scanner.Scan()
-	b := m.scanner.Bytes()
+func tee(s *bufio.Scanner, w []*out, c chan teeResult) error {
+	s.Scan()
+	b := s.Bytes()
 	b = append(b, '\n')
 
-	for _, v := range m.out {
-		go writeAndStore(b, v, results)
+	for _, v := range w {
+		go writeAndStore(b, v, c)
 	}
 
-	for i := 0; i < numOuts; i++ {
-		result := <-results
+	for i := 0; i < len(c); i++ {
+		result := <-c
 		if !result.ok {
 			return result.err
 		}
 	}
-
 	return nil
+}
+
+// tee scans text from in and writes it to all outs
+func (m *mtee) tee() error {
+	if len(m.out) < 1 {
+		return fmt.Errorf("FATAL: tee() - requires at least one out")
+	}
+	if m.scanner == nil {
+		return fmt.Errorf("FATAL tee() - no scanner")
+	}
+
+	return tee(m.scanner, m.out, m.results)
 }
 
 func (m *mtee) run() error {
