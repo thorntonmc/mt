@@ -11,6 +11,7 @@ type mtee struct {
 	out     []*out
 	in      *os.File
 	scanner *bufio.Scanner
+	results chan teeResult
 
 type out struct {
 	file *os.File
@@ -69,6 +70,7 @@ func (m *mtee) init(files []string, modeAppend bool) error {
 
 	// last output is stdout
 	m.out[numOut-1] = newFile(os.Stdout)
+	m.results = make(chan teeResult, len(files))
 	return nil
 
 }
