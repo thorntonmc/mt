@@ -152,13 +152,20 @@ func (m *mtee) tee() error {
 }
 
 func (m *mtee) run() error {
-	for {
+	done := false
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		done = true
+	}()
+	for !done {
 		err := m.tee()
 		if err != nil {
 			return err
 		}
 	}
-
+	return nil
 }
 
 // Run runs mtee from a file string and mode string
@@ -171,10 +178,11 @@ func Run(files []string, mode bool) error {
 		return err
 	}
 
+	err = m.run()
 	// if we opened a file, we need to close it
 	for _, f := range m.out {
-		defer f.Close()
+		f.Close()
 	}
+	return err
 
-	return (m.run())
 }
