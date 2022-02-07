@@ -10,6 +10,11 @@ import (
 	"syscall"
 )
 
+const (
+	defaultBufSize = 4096
+	stdOutBufSize  = 1
+)
+
 // mtee is the application mtee and its configurations
 type mtee struct {
 	out     []*out
@@ -39,10 +44,10 @@ func (o *out) Close() error {
 	return o.file.Close()
 }
 
-func newOut(f *os.File) *out {
+func newOut(f *os.File, n int) *out {
 	return &out{
 		file: f,
-		buf:  bufio.NewWriter(f),
+		buf:  bufio.NewWriterSize(f, n),
 	}
 }
 
@@ -74,7 +79,7 @@ func (m *mtee) init(files []string, modeAppend bool) error {
 	}
 
 	// last output is stdout
-	m.out[numOut-1] = newOut(os.Stdout)
+	m.out[numOut-1] = newOut(os.Stdout, stdOutBufSize)
 	m.results = make(chan teeResult, len(files))
 	return nil
 
@@ -116,7 +121,7 @@ func (m *mtee) setOut(fstr string, index int, modeAppend bool) error {
 		return err
 	}
 
-	m.out[index] = newOut(f)
+	m.out[index] = newOut(f, defaultBufSize)
 
 	return nil
 }
@@ -185,6 +190,7 @@ func Run(files []string, mode bool) error {
 	}
 
 	err = m.run()
+	fmt.Println("wrapping up")
 	// if we opened a file, we need to close it
 	for _, f := range m.out {
 		f.Close()
