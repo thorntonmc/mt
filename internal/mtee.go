@@ -33,6 +33,13 @@ func (o *out) Close() error {
 	return o.file.Close()
 }
 
+func newOut(f *os.File) *out {
+	return &out{
+		file: f,
+		buf:  bufio.NewWriter(f),
+	}
+}
+
 // teeResult is the result of a mtee goroutine
 type teeResult struct {
 	ok  bool
