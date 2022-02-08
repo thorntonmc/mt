@@ -2,15 +2,15 @@ package mtee
 
 import (
 	"bufio"
-	"os"
+	"io"
 	"sync"
 )
 
 // out wraps the output's file, buffer, and mutex
 type out struct {
-	file *os.File
-	buf  *bufio.Writer
-	mu   sync.Mutex
+	wc  io.WriteCloser
+	buf *bufio.Writer
+	mu  sync.Mutex
 }
 
 // Write locks the files mutex, defers the unlock, and writes to the buffer
@@ -26,13 +26,13 @@ func (o *out) Close() error {
 	if err != nil {
 		return err
 	}
-	return o.file.Close()
+	return o.wc.Close()
 }
 
 // newOut takes a file and a buffer size, and returns an out
-func newOut(f *os.File, n int) *out {
+func newOut(w io.WriteCloser, n int) *out {
 	return &out{
-		file: f,
-		buf:  bufio.NewWriterSize(f, n),
+		wc:  w,
+		buf: bufio.NewWriterSize(w, n),
 	}
 }
