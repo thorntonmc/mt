@@ -164,7 +164,6 @@ func Run(files []string, mode bool) error {
 	}
 
 	err = m.run()
-	fmt.Println("wrapping up")
 	// if we opened a file, we need to close it
 	for _, f := range m.out {
 		f.Close()
